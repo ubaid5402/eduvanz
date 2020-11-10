@@ -19,11 +19,11 @@ class Api extends RestController
          
         if(!empty($users))
         {
-            $data['participants'] = $users;
+            $data['data'] = $users;
             $data['code'] = 200;
             $data['errors'] = NULL;
         }else{
-            $data['participants'] = NULL;
+            $data['data'] = NULL;
             $data['code'] = 404;
             $data['errors'] = "Participants not registered yet.";
         }
@@ -42,6 +42,7 @@ class Api extends RestController
             $this->form_validation->set_rules('p_profession', 'Profession', 'required');
             $this->form_validation->set_rules('p_no_of_guest', 'Number of Guest', 'required|numeric');
             $this->form_validation->set_rules('p_address', 'Address', 'required');
+            $this->form_validation->set_rules('p_locality', 'Locality', 'required');
 
             if ($this->form_validation->run() == FALSE){
             $errors = array(
@@ -51,6 +52,7 @@ class Api extends RestController
                 'p_dob' => form_error('p_dob'),
                 'p_profession' => form_error('p_profession'),
                 'p_no_of_guest' => form_error('p_no_of_guest'),
+                'p_locality' => form_error('p_locality'),
                 'p_address' => form_error('p_address')
             );
 
@@ -59,18 +61,60 @@ class Api extends RestController
             $data['code'] = 404;
             }else{
 
-            $data['participants'] = NULL;
-            $data['code'] = 500;
-            $data['errors'] = "Post array required";
+            $arr = array(
+                'p_fname' => $this->post('p_fname'),
+                'p_lname' => $this->post('p_lname'),
+                'p_age' => $this->post('p_age'),
+                'p_dob' => date('Y-m-d',strtotime($this->post('p_dob'))),
+                'p_profession' => $this->post('p_profession'),
+                'p_no_of_guest' => $this->post('p_no_of_guest'),
+                'p_locality' => $this->post('p_locality'),
+                'p_address' => $this->post('p_address')
+            );  
+
+            $this->db->insert('participants',$arr);
+
+            $data['data'] = $this->db->insert_id();
+            $data['code'] = 200;
+            $data['errors'] = NULL;  
 
             } 
         }else{
-            $data['participants'] = NULL;
+            $data['data'] = NULL;
             $data['code'] = 500;
             $data['errors'] = "Post array required";
         }
 
         $this->response($data);
          
+    }
+
+    public function participants_put($id){
+        if($id){
+        $arr = array(
+            'p_fname' => $this->put('p_fname'),
+            'p_lname' => $this->put('p_lname'),
+            'p_age' => $this->put('p_age'),
+            'p_dob' => date('Y-m-d',strtotime($this->put('p_dob'))),
+            'p_profession' => $this->put('p_profession'),
+            'p_no_of_guest' => $this->put('p_no_of_guest'),
+            'p_locality' => $this->put('p_locality'),
+            'p_address' => $this->put('p_address')
+        );
+
+        $this->participant_model->update($id,$arr);
+        
+        $data['data'] = $this->participant_model->get_participant_id($id);
+        $data['code'] = 200;
+        $data['errors'] = NULL;
+
+        }else{
+
+        $data['data'] = NULL;
+        $data['code'] = 404;
+        $data['errors'] = "Id is required";
+
+        }
+        $this->response($data);
     }
 }
